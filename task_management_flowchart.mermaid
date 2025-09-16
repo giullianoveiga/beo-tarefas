@@ -1,0 +1,99 @@
+flowchart TD
+    A[👤 Usuário Acessa Sistema] --> B{🔐 Login Microsoft Teams/Azure AD}
+    B -->|✅ Sucesso| C[🆔 Sistema Identifica Usuário]
+    B -->|❌ Falha| D[🔑 Login Alternativo Local]
+    D -->|✅ Sucesso| C
+    D -->|❌ Falha| E[🚫 Acesso Negado]
+    
+    C --> F{👥 Verificar Perfil do Usuário}
+    
+    F -->|🛡️ Admin| G[📋 Painel Administrativo]
+    F -->|👨‍💼 Gestor| H[📊 Painel do Gestor]
+    F -->|👤 Colaborador| I[📝 Painel do Colaborador]
+    
+    %% Admin Functions
+    G --> G1[👥 Gerenciar Usuários]
+    G --> G2[🎯 Definir Metas Globais]
+    G --> G3[📈 Relatórios Gerenciais]
+    G --> G4[⚙️ Configurações Sistema]
+    G1 --> G1a[🔄 Promover Colaborador → Gestor]
+    G1 --> G1b[📝 Gerenciar Permissões]
+    
+    %% Gestor Functions
+    H --> H1[✍️ Criar/Editar Tarefas]
+    H --> H2[👤 Atribuir Responsáveis]
+    H --> H3[📊 Acompanhar Desempenho]
+    H --> H4[📈 Gerar Relatórios]
+    H --> H5[🎯 Definir Metas Individuais]
+    
+    H1 --> H1a[📋 Título, Descrição]
+    H1 --> H1b[⚡ Complexidade: Simples(1), Normal(2), Complexa(4)]
+    H1 --> H1c[🚨 Prioridade: Baixa, Normal, Alta, Urgente]
+    
+    %% Colaborador Functions
+    I --> I1[📋 Visualizar Tarefas Kanban]
+    I --> I2[▶️ Executar Tarefas]
+    I --> I3[🏆 Ver Ranking/Badges]
+    I --> I4[📊 Ver Progresso Pessoal]
+    
+    I1 --> K[📋 Board Kanban]
+    K --> K1[📝 Em Aberto]
+    K --> K2[⚡ Andamento]
+    K --> K3[🔍 Análise]
+    K --> K4[✅ Concluído]
+    
+    %% Task Flow
+    I2 --> T1[🔄 Mover Tarefa: Em Aberto → Andamento]
+    T1 --> T2[🔄 Mover Tarefa: Andamento → Análise]
+    T2 --> T3[🔄 Mover Tarefa: Análise → Concluído]
+    T3 --> P[💰 Calcular Pontuação]
+    
+    P --> P1{📊 Verificar Conquistas}
+    P1 -->|🎉 Nova Conquista| B1[🏅 Badge: Iniciante - 1ª tarefa]
+    P1 -->|🎉 Nova Conquista| B2[🏅 Badge: Produtivo - 10 tarefas]
+    P1 -->|🎉 Nova Conquista| B3[🏅 Badge: Incansável - 30 tarefas]
+    P1 -->|🎉 Nova Conquista| B4[🏅 Badge: Especialista - 100 pontos]
+    P1 -->|🎉 Nova Conquista| B5[🏅 Badge: Workaholic - 10 tarefas/semana]
+    P1 -->|🎉 Nova Conquista| B6[🏅 Badge: Pontual - todas no prazo]
+    P1 -->|🎉 Nova Conquista| B7[🏅 Badge: Líder do Mês]
+    
+    B1 --> R[📊 Atualizar Ranking]
+    B2 --> R
+    B3 --> R
+    B4 --> R
+    B5 --> R
+    B6 --> R
+    B7 --> R
+    P1 -->|❌ Sem Nova Conquista| R
+    
+    R --> R1[🥇 Ranking por Pontos]
+    R1 --> R2[🏆 Exibir Badges no Perfil]
+    
+    %% Reports
+    H4 --> REP[📈 Sistema de Relatórios]
+    G3 --> REP
+    REP --> REP1[🎯 Meta Individual vs Realizado]
+    REP --> REP2[👥 Meta Equipe vs Realizado]
+    REP --> REP3[📊 Pontos por Usuário]
+    REP --> REP4[📈 Gráficos Comparativos]
+    REP --> REP5[📄 Exportar PDF/Excel]
+    
+    %% Data Analysis Suggestions
+    REP4 --> CHART1[📊 Gráfico Linha - Evolução Temporal]
+    REP4 --> CHART2[📊 Gráfico Barra - Comparativo Usuários]
+    REP4 --> CHART3[🥧 Gráfico Pizza - Distribuição Complexidade]
+    
+    %% Styling
+    classDef adminClass fill:#ff6b6b,stroke:#d63031,stroke-width:2px,color:#fff
+    classDef gestorClass fill:#4ecdc4,stroke:#00b894,stroke-width:2px,color:#fff
+    classDef colaboradorClass fill:#45b7d1,stroke:#0984e3,stroke-width:2px,color:#fff
+    classDef kanbanClass fill:#fd79a8,stroke:#e84393,stroke-width:2px,color:#fff
+    classDef badgeClass fill:#fdcb6e,stroke:#f39c12,stroke-width:2px,color:#333
+    classDef reportClass fill:#6c5ce7,stroke:#5f3dc4,stroke-width:2px,color:#fff
+    
+    class G,G1,G2,G3,G4,G1a,G1b adminClass
+    class H,H1,H2,H3,H4,H5,H1a,H1b,H1c gestorClass
+    class I,I1,I2,I3,I4 colaboradorClass
+    class K,K1,K2,K3,K4,T1,T2,T3 kanbanClass
+    class B1,B2,B3,B4,B5,B6,B7,R,R1,R2 badgeClass
+    class REP,REP1,REP2,REP3,REP4,REP5,CHART1,CHART2,CHART3 reportClass
