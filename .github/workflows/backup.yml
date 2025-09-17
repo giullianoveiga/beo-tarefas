@@ -1,0 +1,87 @@
+name: Database Backup
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to backup"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  BACKUP_RETENTION_DAYS: 30
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Create backup directory
+        run: mkdir -p backups
+
+      - name: Generate backup filename
+        id: backup-name
+        run: |
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          ENVIRONMENT=${{ github.event.inputs.environment || 'production' }}
+          FILENAME="backup_${ENVIRONMENT}_${TIMESTAMP}.sql"
+          echo "filename=$FILENAME" >> $GITHUB_OUTPUT
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+
+      - name: Create database backup
+        run: |
+          PGPASSWORD=${{ secrets.DB_PASSWORD }} pg_dump \
+            -h ${{ secrets.DB_HOST }} \
+            -U ${{ secrets.DB_USER }} \
+            -d ${{ secrets.DB_NAME }} \
+            --no-password \
+            --format=custom \
+            --compress=9 \
+            --verbose \
+            --file=backups/${{ steps.backup-name.outputs.filename }}.backup
+
+      - name: Compress backup
+        run: |
+          cd backups
+          gzip ${{ steps.backup-name.outputs.filename }}.backup
+          ls -la
+
+      - name: Upload backup to storage
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-backup-${{ steps.backup-name.outputs.timestamp }}
+          path: backups/
+          retention-days: ${{ env.BACKUP_RETENTION_DAYS }}
+
+      - name: Clean up old backups
+        run: |
+          # This would typically upload to cloud storage (S3, GCS, etc.)
+          # For now, we'll just list the files
+          echo "Backup created: ${{ steps.backup-name.outputs.filename }}.backup.gz"
+          echo "Cleanup would happen here for backups older than ${{ env.BACKUP_RETENTION_DAYS }} days"
+
+      - name: Send backup notification
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Database backup completed successfully"
+            echo "Backup file: ${{ steps.backup-name.outputs.filename }}.backup.gz"
+          else
+            echo "❌ Database backup failed"
+          fi
+          # Add notification logic here (Slack, email, etc.)
