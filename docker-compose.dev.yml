@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database (Development)
+  postgres:
+    image: postgres:15-alpine
+    container_name: beo-tarefas-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: beo_tarefas_dev
+      POSTGRES_USER: beo_user
+      POSTGRES_PASSWORD: beo_password
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./prisma/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5433:5432" # Different port for dev
+    networks:
+      - beo-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beo_user -d beo_tarefas_dev"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache (Development)
+  redis:
+    image: redis:7-alpine
+    container_name: beo-tarefas-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_dev_data:/data
+    ports:
+      - "6380:6379" # Different port for dev
+    networks:
+      - beo-dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Application (Development with hot reload)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: beo-tarefas-app-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://beo_user:beo_password@postgres:5432/beo_tarefas_dev
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-jwt-secret-key-change-in-production
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - beo-dev-network
+    command: npm run start:dev
+
+volumes:
+  postgres_dev_data:
+  redis_dev_data:
+
+networks:
+  beo-dev-network:
+    driver: bridge

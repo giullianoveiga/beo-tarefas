@@ -11,6 +11,7 @@ const auth_1 = __importDefault(require("./routes/auth"));
 const tasks_1 = __importDefault(require("./routes/tasks"));
 const users_1 = __importDefault(require("./routes/users"));
 const gamification_1 = __importDefault(require("./routes/gamification"));
+const comments_1 = __importDefault(require("./routes/comments"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const prisma = new client_1.PrismaClient();
@@ -25,6 +26,7 @@ app.use('/api/auth', auth_1.default);
 app.use('/api/tasks', tasks_1.default);
 app.use('/api/users', users_1.default);
 app.use('/api/gamification', gamification_1.default);
+app.use('/api/comments', comments_1.default);
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });

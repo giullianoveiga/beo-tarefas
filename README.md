@@ -95,97 +95,305 @@ Error:   #dc2626    /* Vermelho */
 
 ### Frontend
 
-- **React 18** - Interface de usuário
-- **Babel** - Transpilação JSX
+- **React 19** - Interface de usuário moderna
+- **TypeScript** - Tipagem estática
+- **Vite** - Build tool rápido
 - **TailwindCSS** - Framework CSS utilitário
+- **Framer Motion** - Animações
 - **Axios** - Cliente HTTP
-- **CSS Variables** - Sistema de design dinâmico
+- **Chart.js** - Gráficos e analytics
+- **React Markdown** - Renderização de Markdown
+- **@hello-pangea/dnd** - Drag & Drop
 
-### Backend (Planejado)
+### Backend
 
-- **Node.js** - Runtime JavaScript
+- **Node.js 18** - Runtime JavaScript
 - **Express** - Framework web
-- **Prisma** - ORM para banco de dados
+- **Prisma** - ORM moderno
 - **PostgreSQL** - Banco de dados relacional
-- **JWT** - Autenticação
-- **bcrypt** - Hash de senhas
+- **Redis** - Cache e sessões
+- **JWT** - Autenticação segura
+- **Winston** - Logs centralizados
+- **PM2** - Gerenciamento de processos
 
-### DevOps & Ferramentas
+### DevOps & Infraestrutura
 
-- **Git** - Controle de versão
-- **ESLint** - Linting
-- **Prettier** - Formatação de código
+- **Docker** - Containerização
+- **Docker Compose** - Orquestração de serviços
+- **Nginx** - Load balancer e proxy reverso
+- **GitHub Actions** - CI/CD pipeline
+- **PM2** - Process manager
+- **Winston** - Logging estruturado
+- **Node-cron** - Agendamento de tarefas
 
 ## ⚡ Instalação
 
 ### Pré-requisitos
 
-- Node.js >= 16.0.0
-- npm ou yarn
-- Git
+- **Docker & Docker Compose** (Recomendado)
+- **Node.js 18+** (Para desenvolvimento local)
+- **PostgreSQL 15+** (Para desenvolvimento local)
+- **Redis 7+** (Para desenvolvimento local)
+- **Git**
 
-### 1. Clone o Repositório
+### 🚀 Quick Start com Docker (Recomendado)
 
-```bash
-git clone https://github.com/seu-usuario/b-o-tarefas.git
-cd b-o-tarefas
-```
-
-### 2. Instale as Dependências
+#### 1. Clone o repositório
 
 ```bash
-npm install
-# ou
-yarn install
+git clone <repository-url>
+cd beo-tarefas
 ```
 
-### 3. Configure as Variáveis de Ambiente
+#### 2. Configure variáveis de ambiente
 
 ```bash
 cp .env.example .env
+# Edite o .env com suas configurações
 ```
 
-Edite o arquivo `.env`:
-
-```env
-DATABASE_URL="postgresql://usuario:senha@localhost:5432/bo_tarefas"
-JWT_SECRET="seu_jwt_secret_super_seguro"
-AZURE_CLIENT_ID="seu_azure_client_id"
-AZURE_CLIENT_SECRET="seu_azure_client_secret"
-```
-
-### 4. Configure o Banco de Dados
+#### 3. Inicie todos os serviços
 
 ```bash
-npx prisma migrate dev
-npx prisma db seed
+# Ambiente completo (PostgreSQL + Redis + Nginx + App)
+docker-compose up -d
+
+# Ou para desenvolvimento
+docker-compose -f docker-compose.dev.yml up -d
 ```
 
-### 5. Inicie o Servidor de Desenvolvimento
+#### 4. Acesse a aplicação
+
+- **Frontend**: http://localhost:5173
+- **API**: http://localhost:3001
+- **Admin Panel**: http://localhost:80
+- **Health Check**: http://localhost:3001/api/health
+
+### 🛠️ Desenvolvimento Local
+
+#### Backend
 
 ```bash
-npm run dev
-# ou
-yarn dev
+cd beo-tarefas
+npm install
+npm run db:migrate
+npm run db:seed
+npm run start:dev
 ```
 
-Acesse: `http://localhost:3000`
+#### Frontend
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+### 📊 Monitoramento e Health Checks
+
+```bash
+# Health check básico
+curl http://localhost:3001/api/health
+
+# Health check detalhado
+curl http://localhost:3001/api/health/detailed
+
+# PM2 status
+npm run monit:pm2
+
+# Logs em tempo real
+npm run logs:pm2
+```
+
+### 💾 Sistema de Backup
+
+```bash
+# Criar backup manual
+npm run backup:create
+
+# Listar backups disponíveis
+npm run backup:list
+
+# Iniciar backup automático (diário)
+npm run backup:schedule
+
+# Status do agendador
+npm run backup:status
+```
 
 ## 🚀 Deploy
 
-### Usando Docker
+### 🌐 Produção com Docker (Recomendado)
+
+#### Single Server Deployment
 
 ```bash
-docker build -t bo-tarefas .
-docker run -p 3000:3000 bo-tarefas
+# Build e deploy
+docker-compose -f docker-compose.yml up -d
+
+# Com SSL/HTTPS
+docker-compose -f docker-compose.ssl.yml up -d
 ```
 
-### Usando PM2
+#### Multi-Server Deployment
 
 ```bash
+# Load balancer + múltiplas instâncias
+docker-compose -f docker-compose.prod.yml up -d
+
+# Scaling horizontal
+docker-compose up -d --scale app=3
+```
+
+### ⚙️ PM2 Process Management
+
+#### Desenvolvimento
+
+```bash
+# Iniciar com PM2
+npm run start:pm2:dev
+
+# Monitor em tempo real
+npm run monit:pm2
+
+# Ver logs
+npm run logs:pm2
+```
+
+#### Produção
+
+```bash
+# Build da aplicação
 npm run build
-pm2 start ecosystem.config.js
+
+# Iniciar em modo cluster
+npm run start:pm2
+
+# Gerenciar processos
+pm2 restart beo-tarefas-api
+pm2 stop beo-tarefas-api
+pm2 delete beo-tarefas-api
 ```
+
+### ☁️ Cloud Deployment
+
+#### AWS
+
+```bash
+# ECS com Fargate
+aws ecs create-service --cluster beo-cluster \
+  --service-name beo-tarefas \
+  --task-definition beo-task \
+  --desired-count 3
+
+# RDS PostgreSQL + ElastiCache Redis
+# Configurar via AWS Console ou CLI
+```
+
+#### DigitalOcean
+
+```bash
+# App Platform
+doctl apps create --spec app-spec.yml
+
+# Droplet com Docker
+docker-compose up -d
+```
+
+#### Heroku
+
+```bash
+# Buildpacks
+heroku create beo-tarefas
+heroku addons:create heroku-postgresql
+heroku addons:create heroku-redis
+git push heroku main
+```
+
+### 🔧 Configuração SSL
+
+#### Let's Encrypt (Automático)
+
+```bash
+# Instalar certbot
+sudo apt install certbot
+
+# Gerar certificado
+sudo certbot certonly --nginx -d your-domain.com
+
+# Configurar nginx para usar SSL
+# Editar docker/nginx/nginx.production.conf
+```
+
+#### CloudFlare
+
+```bash
+# Configurar SSL/TLS no painel
+# Usar modo "Full (strict)"
+# Configurar page rules para API
+```
+
+### 📊 CI/CD Pipeline
+
+#### GitHub Actions
+
+O projeto inclui pipelines completos para:
+
+- ✅ **Build & Test**: Compilação e testes automatizados
+- ✅ **Security Scan**: Verificação de vulnerabilidades
+- ✅ **Docker Build**: Criação de imagens otimizadas
+- ✅ **Deploy**: Staging e produção automatizados
+- ✅ **Backup**: Backup automático do banco
+
+#### Configuração
+
+```yaml
+# .github/workflows/ci-cd.yml
+name: CI/CD Pipeline
+on: [push, pull_request]
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm ci && npm run build
+```
+
+### 📈 Monitoramento
+
+#### Health Checks
+
+```bash
+# Endpoint básico
+GET /api/health
+
+# Endpoint detalhado
+GET /api/health/detailed
+
+# Nginx status
+curl http://localhost/nginx_status
+```
+
+#### Logs Centralizados
+
+```bash
+# Logs da aplicação
+npm run logs:pm2
+
+# Logs do Nginx
+docker-compose logs nginx
+
+# Logs do PostgreSQL
+docker-compose logs postgres
+```
+
+#### Métricas
+
+- **PM2**: Process monitoring
+- **Nginx**: Request metrics
+- **PostgreSQL**: Query performance
+- **Redis**: Cache hit rates
 
 ## 👥 Usuários de Teste
 

@@ -1,0 +1,122 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: beo-tarefas-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: beo_tarefas
+      POSTGRES_USER: beo_user
+      POSTGRES_PASSWORD: beo_password
+      POSTGRES_ROOT_PASSWORD: root_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker/postgres/backup:/backup
+    ports:
+      - "5432:5432"
+    networks:
+      - beo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beo_user -d beo_tarefas"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: beo-tarefas-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - beo-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Application
+  app:
+    build: .
+    container_name: beo-tarefas-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://beo_user:beo_password@postgres:5432/beo_tarefas
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+    networks:
+      - beo-network
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Load Balancer
+  nginx:
+    image: nginx:alpine
+    container_name: beo-tarefas-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/ssl:/etc/nginx/ssl
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - app
+    networks:
+      - beo-network
+
+  # Backup Service
+  backup:
+    image: postgres:15-alpine
+    container_name: beo-tarefas-backup
+    restart: "no"
+    environment:
+      POSTGRES_DB: beo_tarefas
+      POSTGRES_USER: beo_user
+      POSTGRES_PASSWORD: beo_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - beo-network
+    volumes:
+      - ./docker/postgres/backup:/backup
+      - postgres_data:/var/lib/postgresql/data
+    command: >
+      sh -c "
+        echo 'Starting backup...' &&
+        pg_dump -h postgres -U beo_user -d beo_tarefas > /backup/backup_$(date +%Y%m%d_%H%M%S).sql &&
+        echo 'Backup completed successfully'
+      "
+
+volumes:
+  postgres_data:
+  redis_data:
+  nginx_logs:
+
+networks:
+  beo-network:
+    driver: bridge
